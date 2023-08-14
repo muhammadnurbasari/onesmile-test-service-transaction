@@ -10,7 +10,7 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
-func NewHttpServerTransaction(ctx context.Context, endpoints Endpoints, router *gin.Engine) {
+func NewHttpServerTransaction(_ context.Context, endpoints Endpoints, router *gin.Engine) {
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorEncoder(encodeErrorResponse),
 	}
@@ -23,7 +23,15 @@ func NewHttpServerTransaction(ctx context.Context, endpoints Endpoints, router *
 		options...,
 	)
 
+	validateHistoryHandler := httptransport.NewServer(
+		endpoints.HistoryTransaction, //use the endpoint
+		func(ctx context.Context, r *http.Request) (request interface{}, err error) { return nil, nil }, //converts the parameters received via the request body into the struct expected by the endpoint
+		encodeTransactionResponse, //converts the struct returned by the endpoint to a json response
+		options...,
+	)
+
 	router.POST("/transaction", gin.WrapH(validateTransactionHandler))
+	router.GET("/history", gin.WrapH(validateHistoryHandler))
 
 }
 
@@ -33,7 +41,7 @@ func encodeTransactionResponse(ctx context.Context, w http.ResponseWriter, respo
 }
 
 //converts the parameters received via the request body into the struct expected by the endpoint
-func decodeTransactionRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+func decodeTransactionRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var request transactionRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
@@ -41,7 +49,7 @@ func decodeTransactionRequest(ctx context.Context, r *http.Request) (interface{}
 	return request, nil
 }
 
-func encodeErrorResponse(ctx context.Context, err error, w http.ResponseWriter) {
+func encodeErrorResponse(_ context.Context, err error, w http.ResponseWriter) {
 	if err == nil {
 		panic("encodeError with nil error")
 	}
