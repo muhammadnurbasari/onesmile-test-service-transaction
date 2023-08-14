@@ -35,6 +35,10 @@ type transactionResponse struct {
 	Total  uint64 `json:"total"`
 }
 
+type transactionResponseError struct {
+	Error error `json:"error"`
+}
+
 type historyResponse struct {
 	Id         int32    `json:"id"`
 	Items      []*items `json:"items"`
@@ -75,6 +79,20 @@ func (s *service) CreateTransaction(ctx context.Context, req *transactionRequest
 		myItems = append(myItems, each)
 	}
 
+	// validate credit card number
+	reqCreditCard := generate.CreditCard{CreditCard: req.CreditCard}
+	trxCC := dialService.ServiceCreditCard()
+	validate, err := trxCC.ValidateCreditCard(context.Background(), &reqCreditCard)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !validate.IsValidate {
+		return nil, errors.New("not a valid credit card")
+	}
+
+	// create a new transaction
 	myRequest := generate.Transaction{
 		Items:      myItems,
 		GrandTotal: int64(req.GrandTotal),

@@ -6,12 +6,29 @@ import (
 	"fmt"
 	"os"
 
+	_ "github.com/muhammadnurbasari/onesmile-test-service-transaction/docs"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/muhammadnurbasari/onesmile-test-service-transaction/transaction"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// !Important : Comments below are formatted as it is to be read by Swagger tools (Swaggo)
+// @title SERVICE TRANSACTION
+// @version 1.0.0
+// @description API DOCUMENTATION SERVICE TRANSACTION
+// @termsOfService
+// @contact.name API Support
+// @contact.name ABBAS
+// @contact.email m.nurbasari@gmail.com
+// @BasePath
+// @query.collection.format multi
+// @securityDefinitions.apikey JWTToken
+// @in header
+// @name Authorization
 func main() {
 	var httpAddr = flag.String("http", ":8080", "http listen address")
 	var logger log.Logger
@@ -43,6 +60,8 @@ func main() {
 	errs := make(chan error)
 	go func() {
 		fmt.Println("listening on port", *httpAddr)
+		// swagger docs
+		router.GET("/docs/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 		transaction.NewHttpServerTransaction(ctx, endpoints, router)
 		errs <- router.Run(*httpAddr)
 	}()

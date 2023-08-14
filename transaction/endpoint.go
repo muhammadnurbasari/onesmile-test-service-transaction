@@ -18,6 +18,16 @@ func MakeEndpoints(s ServiceTransaction) Endpoints {
 	}
 }
 
+// Create Transaction godoc
+// @Summary Create Transaction
+// @Description API for Create transaction
+// @Tags TRANSACTION
+// @Accept  json
+// @Param request body transactionRequest true "Request Body Raw"
+// @Produce  json
+// @Success 200 {object} transactionResponse
+// @Failure 400 {object} transactionResponseError
+// @Router /transaction [post]
 func makeCreateTransactionEndpoint(svc ServiceTransaction) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(transactionRequest)
@@ -31,6 +41,15 @@ func makeCreateTransactionEndpoint(svc ServiceTransaction) endpoint.Endpoint {
 	}
 }
 
+// History godoc
+// @Summary History
+// @Description API for History
+// @Tags TRANSACTION
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} []historyResponse
+// @Failure 400 {object} transactionResponseError
+// @Router /history [get]
 func makeHistoryTransactionEndpoint(svc ServiceTransaction) endpoint.Endpoint {
 	return func(ctx context.Context, _ interface{}) (response interface{}, err error) {
 		res, err := svc.HistoryTransaction(ctx)

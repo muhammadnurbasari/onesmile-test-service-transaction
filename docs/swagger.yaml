@@ -1,0 +1,117 @@
+definitions:
+  transaction.historyResponse:
+    properties:
+      credit_card:
+        type: string
+      grand_total:
+        type: integer
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/transaction.items'
+        type: array
+    type: object
+  transaction.item:
+    properties:
+      name:
+        type: string
+      quantity:
+        type: integer
+      subtotal:
+        type: integer
+    type: object
+  transaction.items:
+    properties:
+      history_id:
+        type: integer
+      name:
+        type: string
+      quantity:
+        type: integer
+      subtotal:
+        type: integer
+    type: object
+  transaction.transactionRequest:
+    properties:
+      credit_card:
+        type: string
+      grand_total:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/transaction.item'
+        type: array
+    type: object
+  transaction.transactionResponse:
+    properties:
+      status:
+        type: string
+      total:
+        type: integer
+    type: object
+  transaction.transactionResponseError:
+    properties:
+      error: {}
+    type: object
+info:
+  contact:
+    email: m.nurbasari@gmail.com
+    name: ABBAS
+  description: API DOCUMENTATION SERVICE TRANSACTION
+  title: SERVICE TRANSACTION
+  version: 1.0.0
+paths:
+  /history:
+    get:
+      consumes:
+      - application/json
+      description: API for History
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/transaction.historyResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transaction.transactionResponseError'
+      summary: History
+      tags:
+      - TRANSACTION
+  /transaction:
+    post:
+      consumes:
+      - application/json
+      description: API for Create transaction
+      parameters:
+      - description: Request Body Raw
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/transaction.transactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transaction.transactionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transaction.transactionResponseError'
+      summary: Create Transaction
+      tags:
+      - TRANSACTION
+securityDefinitions:
+  JWTToken:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
