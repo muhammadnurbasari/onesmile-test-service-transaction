@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
@@ -37,7 +38,27 @@ func NewHttpServerTransaction(_ context.Context, endpoints Endpoints, router *gi
 
 //converts the struct returned by the endpoint to a json response
 func encodeTransactionResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	// return json.NewEncoder(w).Encode(response)
+
+	if f, ok := response.(endpoint.Failer); ok && f.Failed() != nil {
+		errorEncoder(ctx, f.Failed(), w)
+		return nil
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	return json.NewEncoder(w).Encode(response)
+}
+
+func errorEncoder(_ context.Context, err error, w http.ResponseWriter) {
+	w.WriteHeader(err2code(err))
+	json.NewEncoder(w).Encode(errorWrapper{Error: err.Error()})
+}
+
+func err2code(err error) int {
+	return http.StatusInternalServerError
+}
+
+type errorWrapper struct {
+	Error string `json:"error"`
 }
 
 //converts the parameters received via the request body into the struct expected by the endpoint

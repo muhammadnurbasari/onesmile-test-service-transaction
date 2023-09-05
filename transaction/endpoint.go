@@ -55,9 +55,21 @@ func makeHistoryTransactionEndpoint(svc ServiceTransaction) endpoint.Endpoint {
 		res, err := svc.HistoryTransaction(ctx)
 
 		if err != nil {
-			return nil, err
+			return HistoryResponse{Message: err.Error(), Data: []historyResponse{}, Error: err}, err
 		}
 
-		return res, err
+		if len(*res) == 0 {
+			return HistoryResponse{Message: "success", Data: []historyResponse{}, Error: nil}, err
+		}
+
+		return HistoryResponse{Message: "Success", Data: *res, Error: nil}, err
 	}
 }
+
+type HistoryResponse struct {
+	Message string            `json:"message"`
+	Data    []historyResponse `json:"data"`
+	Error   error             `json:"error"`
+}
+
+func (r HistoryResponse) Failed() error { return r.Error }
