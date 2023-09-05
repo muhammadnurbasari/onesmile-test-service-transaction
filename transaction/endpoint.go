@@ -62,7 +62,7 @@ func makeHistoryTransactionEndpoint(svc ServiceTransaction) endpoint.Endpoint {
 			return HistoryResponse{Message: "success", Data: []historyResponse{}, Error: nil}, err
 		}
 
-		return HistoryResponse{Message: "Success", Data: *res, Error: nil}, err
+		return HistoryResponse{Message: "success", Data: *res, Error: nil}, err
 	}
 }
 
