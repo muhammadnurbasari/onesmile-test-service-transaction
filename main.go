@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
+	"github.com/muhammadnurbasari/onesmile-test-service-transaction/dialService"
 	_ "github.com/muhammadnurbasari/onesmile-test-service-transaction/docs"
+	"google.golang.org/grpc"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-kit/log"
@@ -45,9 +48,32 @@ func main() {
 	level.Info(logger).Log("msg", "service started")
 	defer level.Info(logger).Log("msg", "service ended")
 
+	err := godotenv.Load("config/.env")
+
+	if err != nil {
+		level.Error(logger).Log("err : ", err.Error())
+		os.Exit(1)
+	}
+
+	DIAL_CREDITCARD_SERVICE := os.Getenv("DIAL_CREDITCARD_SERVICE")
+	grpcClientConnCC, err := grpc.Dial(DIAL_CREDITCARD_SERVICE, grpc.WithInsecure())
+	if err != nil {
+		level.Error(logger).Log("err : ", "could not connect to"+DIAL_CREDITCARD_SERVICE+" error: "+err.Error())
+		os.Exit(1)
+	}
+
+	DIAL_HISTORY_SERVICE := os.Getenv("DIAL_HISTORY_SERVICE")
+	grpcClientConnTrx, err := grpc.Dial(DIAL_HISTORY_SERVICE, grpc.WithInsecure())
+	if err != nil {
+		level.Error(logger).Log("err : ", "could not connect to"+DIAL_HISTORY_SERVICE+" error: "+err.Error())
+		os.Exit(1)
+	}
+
 	flag.Parse()
+	validateClient := dialService.ServiceCreditCard(grpcClientConnCC)
+	transactionClient := dialService.ServiceHistory(grpcClientConnTrx)
 	ctx := context.Background()
-	srv := transaction.NewService(logger)
+	srv := transaction.NewService(logger, validateClient, transactionClient)
 
 	router := gin.Default()
 	router.Use(func(c *gin.Context) {

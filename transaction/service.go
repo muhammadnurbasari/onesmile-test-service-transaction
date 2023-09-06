@@ -8,7 +8,6 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/muhammadnurbasari/onesmile-test-protobuffer/proto/generate"
-	"github.com/muhammadnurbasari/onesmile-test-service-transaction/dialService"
 )
 
 type transactionRequest struct {
@@ -47,7 +46,9 @@ type historyResponse struct {
 }
 
 type service struct {
-	logger log.Logger
+	logger            log.Logger
+	validationClient  generate.ValidationClient
+	transactionClient generate.TransactionsClient
 }
 
 func (s *service) CreateTransaction(ctx context.Context, req *transactionRequest) (*transactionResponse, error) {
@@ -81,8 +82,7 @@ func (s *service) CreateTransaction(ctx context.Context, req *transactionRequest
 
 	// validate credit card number
 	reqCreditCard := generate.CreditCard{CreditCard: req.CreditCard}
-	trxCC := dialService.ServiceCreditCard()
-	validate, err := trxCC.ValidateCreditCard(context.Background(), &reqCreditCard)
+	validate, err := s.validationClient.ValidateCreditCard(context.Background(), &reqCreditCard)
 
 	if err != nil {
 		return nil, err
@@ -98,8 +98,8 @@ func (s *service) CreateTransaction(ctx context.Context, req *transactionRequest
 		GrandTotal: int64(req.GrandTotal),
 		CreditCard: req.CreditCard,
 	}
-	trx := dialService.ServiceHistory()
-	_, err = trx.Create(context.Background(), &myRequest)
+
+	_, err = s.transactionClient.Create(context.Background(), &myRequest)
 
 	if err != nil {
 		return nil, err
@@ -109,8 +109,8 @@ func (s *service) CreateTransaction(ctx context.Context, req *transactionRequest
 }
 
 func (s *service) HistoryTransaction(ctx context.Context) (*[]historyResponse, error) {
-	trx := dialService.ServiceHistory()
-	result, err := trx.Histories(context.Background(), new(empty.Empty))
+
+	result, err := s.transactionClient.Histories(context.Background(), new(empty.Empty))
 
 	if err != nil {
 		fmt.Println("error 1 : " + err.Error())
@@ -149,6 +149,6 @@ type ServiceTransaction interface {
 	HistoryTransaction(ctx context.Context) (*[]historyResponse, error)
 }
 
-func NewService(logger log.Logger) ServiceTransaction {
-	return &service{logger: log.With(logger, "service", "transaction")}
+func NewService(logger log.Logger, validationClient generate.ValidationClient, transactionClient generate.TransactionsClient) ServiceTransaction {
+	return &service{logger: log.With(logger, "service", "transaction"), validationClient: validationClient, transactionClient: transactionClient}
 }
