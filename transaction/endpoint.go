@@ -3,7 +3,9 @@ package transaction
 import (
 	"context"
 
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
+	stdjwt "github.com/golang-jwt/jwt/v4"
 )
 
 type Endpoints struct {
@@ -12,8 +14,16 @@ type Endpoints struct {
 }
 
 func MakeEndpoints(s ServiceTransaction) Endpoints {
+	keyFunc := func(token *stdjwt.Token) (interface{}, error) { return []byte("secret-jwt"), nil }
+
+	var createTransactionEndpoint endpoint.Endpoint
+	{
+		createTransactionEndpoint = makeCreateTransactionEndpoint(s)
+		createTransactionEndpoint = jwt.NewParser(keyFunc, stdjwt.SigningMethodHS256, jwt.StandardClaimsFactory)(createTransactionEndpoint)
+	}
+
 	return Endpoints{
-		CreateTransaction:  makeCreateTransactionEndpoint(s),
+		CreateTransaction:  createTransactionEndpoint,
 		HistoryTransaction: makeHistoryTransactionEndpoint(s),
 	}
 }

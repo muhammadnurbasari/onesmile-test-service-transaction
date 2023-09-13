@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
@@ -21,14 +22,14 @@ func NewHttpServerTransaction(_ context.Context, endpoints Endpoints, router *gi
 		endpoints.CreateTransaction, //use the endpoint
 		decodeTransactionRequest,    //converts the parameters received via the request body into the struct expected by the endpoint
 		encodeTransactionResponse,   //converts the struct returned by the endpoint to a json response
-		options...,
+		append(options, httptransport.ServerBefore(jwt.HTTPToContext()))...,
 	)
 
 	validateHistoryHandler := httptransport.NewServer(
 		endpoints.HistoryTransaction, //use the endpoint
 		func(ctx context.Context, r *http.Request) (request interface{}, err error) { return nil, nil }, //converts the parameters received via the request body into the struct expected by the endpoint
 		encodeTransactionResponse, //converts the struct returned by the endpoint to a json response
-		options...,
+		append(options, httptransport.ServerBefore(jwt.HTTPToContext()))...,
 	)
 
 	router.POST("/transaction", gin.WrapH(validateTransactionHandler))
